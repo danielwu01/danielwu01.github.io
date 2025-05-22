@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERCOT Energy Market and BESS in Virtual Power Plants</title>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #00a3e0;
+            --accent-color: #7b2cbf;
+            --success-color: #38b000;
+            --warning-color: #ff9500;
+            --danger-color: #d90429;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+            --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --tech-pattern: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230066cc' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            line-height: 1.6;
+            color: var(--dark-color);
+            background-color: #f5f7fa;
+            background-image: var(--tech-pattern);
+            padding-top: 70px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        header::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.95);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 1.5rem;
+        }
+
+        .nav-links a {
+            color: var(--dark-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--dark-color);
+        }
+
+        main {
+            margin-bottom: 3rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            background-color: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #eaeaea;
+            font-size: 1.8rem;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem;
+            font-size: 1.4rem;
+        }
+
+        h4 {
+            color: var(--dark-color);
+            margin: 1.2rem 0 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            height: 400px;
+        }
+
+        .info-box {
+            background-color: rgba(0, 102, 204, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .warning-box {
+            background-color: rgba(255, 149, 0, 0.1);
+            border-left: 4px solid var(--warning-color);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .success-box {
+            background-color: rgba(56, 176, 0, 0.1);
+            border-left: 4px solid var(--success-color);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 50px;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-primary {
+            background-color: rgba(0, 102, 204, 0.1);
+            color: var(--primary-color);
+        }
+
+        .badge-secondary {
+            background-color: rgba(0, 163, 224, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .badge-success {
+            background-color: rgba(56, 176, 0, 0.1);
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 149, 0, 0.1);
+            color: var(--warning-color);
+        }
+
+        .badge-danger {
+            background-color: rgba(217, 4, 41, 0.1);
+            color: var(--danger-color);
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 70px;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            z-index: 900;
+            padding: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.5rem;
+            color: var(--dark-color);
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background-color: rgba(0, 102, 204, 0.1);
+            color: var(--primary-color);
+        }
+
+        .sidebar-nav .submenu {
+            padding-left: 1rem;
+            display: none;
+        }
+
+        .sidebar-nav .submenu.show {
+            display: block;
+        }
+
+        .sidebar-nav .has-submenu > a::after {
+            content: "▼";
+            float: right;
+            font-size: 0.8rem;
+        }
+
+        .content {
+            margin-left: 250px;
+            transition: var(--transition);
+        }
+
+        .footer {
+            background-color: white;
+            padding: 2rem 0;
+            border-top: 1px solid #eaeaea;
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .footer-text {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-left: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--gray-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            background-color: #0052a3;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #0082b3;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #2d9000;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+
+        .btn-warning:hover {
+            background-color: #cc7700;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #b00021;
+        }
+
+        .citation {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-top: 0.5rem;
+        }
+
+        .glossary-term {
+            font-weight: bold;
+            color: var(--secondary-color);
+            cursor: help;
+            border-bottom: 1px dotted var(--secondary-color);
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background-color: var(--primary-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            box-shadow: var(--box-shadow);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .back-to-top.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            background-color: #0052a3;
+            transform: translateY(-5px);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .nav-links.show {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: white;
+                padding: 1rem;
+                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            }
+            
+            .nav-links.show li {
+                margin: 0.5rem 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            h3 {
+                font-size: 1.2rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .footer-links {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .footer-links li:first-child {
+                margin-left: 0;
+            }
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Charts */
+        .chart {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="logo">ERCOT & BESS Report</a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#introduction">Introduction</a></li>
+                <li><a href="#ercot-market">ERCOT Market</a></li>
+                <li><a href="#virtual-power-plants">Virtual Power Plants</a></li>
+                <li><a href="#bess-technology">BESS Technology</a></li>
+                <li><a href="#peak-shaving">Peak Shaving</a></li>
+                <li><a href="#case-studies">Case Studies</a></li>
+                <li><a href="#future-outlook">Future Outlook</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-title">Table of Contents</div>
+        <ul class="sidebar-nav">
+            <li><a href="#introduction">Introduction</a></li>
+            <li class="has-submenu">
+                <a href="#ercot-market">ERCOT Energy Market</a>
+                <ul class="submenu">
+                    <li><a href="#ercot-overview">Overview</a></li>
+                    <li><a href="#market-structure">Market Structure</a></li>
+                    <li><a href="#challenges">Challenges</a></li>
+                    <li><a href="#opportunities">Opportunities</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#virtual-power-plants">Virtual Power Plants</a>
+                <ul class="submenu">
+                    <li><a href="#vpp-concept">Concept & Definition</a></li>
+                    <li><a href="#vpp-components">Components</a></li>
+                    <li><a href="#vpp-benefits">Benefits</a></li>
+                    <li><a href="#vpp-challenges">Challenges</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#bess-technology">BESS Technology</a>
+                <ul class="submenu">
+                    <li><a href="#bess-overview">Overview</a></li>
+                    <li><a href="#bess-types">Types of BESS</a></li>
+                    <li><a href="#bess-applications">Applications</a></li>
+                </ul>
+            </li>
+            <li class="has-submenu">
+                <a href="#peak-shaving">Peak Shaving with BESS</a>
+                <ul class="submenu">
+                    <li><a href="#peak-shaving-concept">Concept</a></li>
+                    <li><a href="#peak-shaving-benefits">Benefits</a></li>
+                    <li><a href="#peak-shaving-implementation">Implementation</a></li>
+                </ul>
+            </li>
+            <li><a href="#case-studies">Case Studies</a></li>
+            <li><a href="#future-outlook">Future Outlook</a></li>
+            <li><a href="#conclusion">Conclusion</a></li>
+            <li><a href="#references">References</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="container">
+            <!-- Header -->
+            <header>
+                <div class="header-content">
+                    <h1>ERCOT Energy Market and BESS in Virtual Power Plants</h1>
+                    <p class="subtitle">A Comprehensive Analysis of Battery Energy Storage Systems for Peak Load Shaving</p>
+                </div>
+            </header>
+
+            <main>
+                <!-- Introduction Section -->
+                <section id="introduction">
+                    <h2>Introduction</h2>
+                    <p>The electric power industry is undergoing a significant transformation driven by the increasing penetration of renewable energy resources, technological advancements, and evolving regulatory frameworks. As the grid transitions from traditional centralized generation to a more distributed model, new challenges and opportunities emerge for grid operators, utilities, and consumers.</p>
+                    
+                    <p>The Electric Reliability Council of Texas (ERCOT) manages the flow of electric power to more than 26 million Texas customers, representing about 90 percent of the state's electric load. As one of the largest independent system operators (ISOs) in the United States, ERCOT faces unique challenges in maintaining grid reliability while integrating increasing amounts of renewable energy resources.</p>
+                    
+                    <div class="info-box">
+                        <h4>Key Challenges in Modern Power Systems:</h4>
+                        <ul>
+                            <li>Integration of intermittent renewable energy sources</li>
+                            <li>Maintaining grid stability with decreasing conventional generation</li>
+                            <li>Managing peak demand periods efficiently</li>
+                            <li>Ensuring resilience against extreme weather events</li>
+                            <li>Adapting to evolving market structures and regulations</li>
+                        </ul>
+                    </div>
+                    
+                    <p>Battery Energy Storage Systems (BESS) have emerged as a versatile solution to address many of these challenges. When integrated into Virtual Power Plants (VPPs), BESS can provide a range of services including peak load shaving, frequency regulation, voltage support, and renewable energy integration. This report explores the ERCOT energy market structure and examines how BESS can be effectively deployed in VPPs to shave peak loads and enhance grid reliability.</p>
+                    
+                    <div class="chart-container">
+                        <canvas id="introChart" class="chart"></canvas>
+                    </div>
+                </section>
+
+                <!-- ERCOT Energy Market Section -->
+                <section id="ercot-market">
+                    <h2>ERCOT Energy Market</h2>
+                    
+                    <div id="ercot-overview">
+                        <h3>Overview of ERCOT</h3>
+                        <p>The Electric Reliability Council of Texas (ERCOT) is a nonprofit organization that manages the electric grid for approximately 90% of Texas's electric load. ERCOT's grid is unique in that it operates as an isolated interconnection, largely separate from the Eastern and Western Interconnections that cover most of North America. This isolation provides ERCOT with regulatory independence but also creates challenges for importing power during emergencies.</p>
+                        
+                        <div class="grid">
+                            <div class="card">
+                                <div class="card-title">ERCOT at a Glance</div>
+                                <ul>
+                                    <li><strong>Service Area:</strong> 90% of Texas electric load</li>
+                                    <li><strong>Population Served:</strong> Over 26 million Texans</li>
+                                    <li><strong>Peak Demand:</strong> 80,148 MW (July 2023)</li>
+                                    <li><strong>Generation Capacity:</strong> Over 100,000 MW</li>
+                                    <li><strong>Transmission Lines:</strong> Approximately 46,500 miles</li>
+                                    <li><strong>Market Structure:</strong> Energy-only market with scarcity pricing</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">ERCOT's Key Functions</div>
+                                <ul>
+                                    <li>Maintaining system reliability</li>
+                                    <li>Facilitating competitive wholesale and retail markets</li>
+                                    <li>Ensuring open access to transmission</li>
+                                    <li>Managing grid operations</li>
+                                    <li>Coordinating emergency response</li>
+                                    <li>Planning for future grid needs</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="market-structure">
+                        <h3>ERCOT Market Structure</h3>
+                        <p>ERCOT operates an energy-only market, which differs from capacity markets used in other regions. In an energy-only market, generators are paid solely for the electricity they produce, without additional payments for maintaining capacity. This market design relies on scarcity pricing to incentivize investment in new generation resources.</p>
+                        
+                        <h4>Key Components of ERCOT's Market Structure:</h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Market Component</th>
+                                        <th>Description</th>
+                                        <th>Timeframe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Day-Ahead Market (DAM)</td>
+                                        <td>Forward energy market where buyers and sellers commit to energy transactions for the following day</td>
+                                        <td>Day ahead of operating day</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Real-Time Market (RTM)</td>
+                                        <td>Balances actual production and consumption in real-time with 5-minute dispatch intervals</td>
+                                        <td>Operating day, every 5 minutes</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Ancillary Services Market</td>
+                                        <td>Procures resources needed to maintain grid reliability (regulation, responsive reserves, non-spinning reserves)</td>
+                                        <td>Day ahead and adjusted in real-time</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Congestion Revenue Rights (CRR)</td>
+                                        <td>Financial instruments that allow market participants to hedge against transmission congestion costs</td>
+                                        <td>Monthly and annual auctions</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Reliability Unit Commitment (RUC)</td>
+                                        <td>Process to ensure sufficient capacity is available to meet forecasted demand</td>
+                                        <td>Day ahead and hourly during operating day</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <p>ERCOT's market design includes an Operating Reserve Demand Curve (ORDC) that administratively increases prices as operating reserves decrease. This mechanism is designed to reflect the increasing value of energy as the system approaches scarcity conditions and to provide revenue sufficiency for generators.</p>
+                        
+                        <div class="chart-container">
+                            <canvas id="ercotGenerationMixChart" class="chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div id="challenges">
+                        <h3>Challenges in the ERCOT Market</h3>
+                        <p>The ERCOT market faces several significant challenges that impact its operation and reliability:</p>
+                        
+                        <div class="warning-box">
+                            <h4>Major Challenges:</h4>
+                            <ol>
+                                <li><strong>Extreme Weather Vulnerability:</strong> The February 2021 winter storm exposed vulnerabilities in ERCOT's grid, resulting in widespread outages and significant economic damage. This highlighted the need for improved weatherization and emergency preparedness.</li>
+                                <li><strong>Renewable Integration:</strong> ERCOT has seen rapid growth in wind and solar generation, which introduces variability and uncertainty into grid operations. Managing this intermittency requires new approaches to grid management and market design.</li>
+                                <li><strong>Peak Demand Growth:</strong> Texas continues to experience population and economic growth, driving increases in peak electricity demand. Meeting these peaks efficiently is a growing challenge.</li>
+                                <li><strong>Transmission Constraints:</strong> The geographic separation between renewable resources (primarily in West Texas) and load centers (in East Texas) creates transmission congestion issues.</li>
+                                <li><strong>Resource Adequacy:</strong> The energy-only market design has raised concerns about whether it provides sufficient incentives for investment in new dispatchable generation capacity.</li>
+                            </ol>
+                        </div>
+                        
+                        <p>These challenges have prompted ongoing discussions about potential reforms to ERCOT's market design, including the introduction of new services and products that could better value reliability and flexibility.</p>
+                    </div>
+                    
+                    <div id="opportunities">
+                        <h3>Opportunities in the ERCOT Market</h3>
+                        <p>Despite its challenges, the ERCOT market presents significant opportunities for innovative technologies and business models:</p>
+                        
+                        <div class="success-box">
+                            <h4>Key Opportunities:</h4>
+                            <ul>
+                                <li><strong>Energy Storage Deployment:</strong> ERCOT's price volatility and need for flexibility create favorable economics for battery storage projects.</li>
+                                <li><strong>Demand Response:</strong> Programs that incentivize consumers to reduce consumption during peak periods can help manage grid stress and capture value from price spikes.</li>
+                                <li><strong>Ancillary Services:</strong> Fast-responding resources like batteries can provide high-value grid services such as frequency regulation and responsive reserves.</li>
+                                <li><strong>Virtual Power Plants:</strong> Aggregating distributed energy resources can create virtual power plants capable of participating in wholesale markets and providing grid services.</li>
+                                <li><strong>Market Evolution:</strong> ERCOT is implementing market changes that could create new revenue streams for flexible resources, including Real-Time Co-optimization with Batteries (RTC+B) planned for December 2025.</li>
+                            </ul>
+                        </div>
+                        
+                        <p>These opportunities are particularly relevant for Battery Energy Storage Systems (BESS), which can provide multiple services simultaneously and respond rapidly to changing grid conditions.</p>
+                        
+                        <div class="chart-container">
+                            <div id="ercotPriceVolatilityChart" class="chart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Virtual Power Plants Section -->
+                <section id="virtual-power-plants">
+                    <h2>Virtual Power Plants (VPPs)</h2>
+                    
+                    <div id="vpp-concept">
+                        <h3>Concept and Definition</h3>
+                        <p>A Virtual Power Plant (VPP) is a network of decentralized, medium-scale power generating units, flexible loads, and energy storage systems that are aggregated and operated through a central control system. VPPs leverage information and communication technology (ICT) to integrate and coordinate these distributed energy resources (DERs), enabling them to act as a single entity in the power system.</p>
+                        
+                        <div class="info-box">
+                            <p>According to IEEE literature, a VPP can be defined as: <em>"A portfolio of DERs which are connected by a control system based on information and communication technology (ICT). The VPP acts as a single visible entity in the power system, is always grid-tied and can be either static or dynamic."</em></p>
+                        </div>
+                        
+                        <p>Unlike microgrids, which can operate in islanded mode, VPPs are always connected to the main grid. They focus on optimizing the economic value of aggregated resources rather than providing energy independence. VPPs can participate in wholesale markets, provide ancillary services, and help manage grid constraints, similar to conventional power plants but with enhanced flexibility and distributed characteristics.</p>
+                        
+                        <div class="grid">
+                            <div class="card">
+                                <div class="card-title">Types of VPPs</div>
+                                <ul>
+                                    <li><strong>Commercial VPP (CVPP):</strong> Focuses on market participation and trading in energy markets</li>
+                                    <li><strong>Technical VPP (TVPP):</strong> Provides system services and supports grid operations</li>
+                                    <li><strong>Supply-side VPP:</strong> Consists primarily of distributed generation units</li>
+                                    <li><strong>Demand-response VPP:</strong> Formed by aggregating flexible loads</li>
+                                    <li><strong>Mixed-asset VPP:</strong> Combines generation, storage, and flexible loads</li>
+                                    <li><strong>Dynamic VPP:</strong> Temporarily cooperates based on market conditions and forecasts</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">VPP vs. Microgrid</div>
+                                <table>
+                                    <tr>
+                                        <th>Characteristic</th>
+                                        <th>VPP</th>
+                                        <th>Microgrid</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Geographic Constraints</td>
+                                        <td>Not limited by geography</td>
+                                        <td>Geographically defined</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Islanding Capability</td>
+                                        <td>Always grid-connected</td>
+                                        <td>Can operate in islanded mode</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Primary Focus</td>
+                                        <td>Economic optimization</td>
+                                        <td>Reliability and resilience</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Grid Connection</td>
+                                        <td>Multiple points of connection</td>
+                                        <td>Single point of common coupling</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Market Participation</td>
+                                        <td>Wholesale markets</td>
+                                        <td>Typically retail markets</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="vpp-components">
+                        <h3>Components of a Virtual Power Plant</h3>
+                        <p>A VPP consists of three essential components that work together to create a cohesive and functional system:</p>
+                        
+                        <h4>1. Portfolio of Distributed Energy Resources (DERs)</h4>
+                        <p>The foundation of any VPP is its portfolio of DERs, which may include:</p>
+                        <ul>
+                            <li><strong>Distributed Generation (DG):</strong> Combined heat and power (CHP) units, fuel cells, microturbines, diesel generators, photovoltaics, wind turbines</li>
+                            <li><strong>Energy Storage Systems (ESS):</strong> Batteries, flywheels, superconducting magnetic energy storage</li>
+                            <li><strong>Controllable Loads (CL):</strong> Electric vehicles, HVAC systems, industrial processes with flexible demand</li>
+                            <li><strong>Microgrids:</strong> Self-contained energy systems that can be integrated into larger VPPs</li>
+                        </ul>
+                        
+                        <h4>2. Control System</h4>
+                        <p>The control system is the brain of the VPP, coordinating all individual DERs to operate as a single entity. Control systems can be:</p>
+                        <ul>
+                            <li><strong>Centralized:</strong> One control coordination center processes signals from all individual units</li>
+                            <li><strong>Decentralized:</strong> Each DER has its own local controller connected via a communication network</li>
+                        </ul>
+                        
+                        <h4>3. Information and Communication Technologies (ICTs)</h4>
+                        <p>ICTs provide the connectivity and data exchange capabilities necessary for VPP operation:</p>
+                        <ul>
+                            <li><strong>Data Measurement:</strong> Sensors and meters at DER locations</li>
+                            <li><strong>Communication Technologies:</strong> Protocols and standards for data transmission</li>
+                            <li><strong>Communication Networks:</strong> Infrastructure for transmitting measurements, data, and control signals</li>
+                        </ul>
+                        
+                        <div class="chart-container">
+                            <div id="vppArchitectureChart" class="chart"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="vpp-benefits">
+                        <h3>Benefits of Virtual Power Plants</h3>
+                        <p>VPPs offer numerous benefits to the power system, market participants, and end users:</p>
+                        
+                        <div class="grid">
+                            <div class="card">
+                                <div class="card-title">System Benefits</div>
+                                <ul>
+                                    <li>Enhanced grid stability and reliability</li>
+                                    <li>Improved integration of renewable energy resources</li>
+                                    <li>Reduced need for transmission and distribution upgrades</li>
+                                    <li>Decreased reliance on peaking power plants</li>
+                                    <li>Lower greenhouse gas emissions</li>
+                                    <li>Increased system resilience</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">Market Benefits</div>
+                                <ul>
+                                    <li>Access to wholesale markets for small-scale resources</li>
+                                    <li>Diversified revenue streams for DER owners</li>
+                                    <li>Enhanced market competition</li>
+                                    <li>Improved price formation</li>
+                                    <li>Reduced market power of large generators</li>
+                                    <li>New business models and market participants</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">End User Benefits</div>
+                                <ul>
+                                    <li>Reduced electricity costs through optimized operation</li>
+                                    <li>New revenue opportunities for DER owners</li>
+                                    <li>Enhanced value of existing assets</li>
+                                    <li>Improved energy independence</li>
+                                    <li>Support for sustainability goals</li>
+                                    <li>Participation in grid services without technical expertise</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="vpp-challenges">
+                        <h3>Challenges and Barriers to VPP Implementation</h3>
+                        <p>Despite their potential benefits, VPPs face several challenges that can hinder their widespread adoption:</p>
+                        
+                        <h4>Technical Challenges</h4>
+                        <ul>
+                            <li><strong>Interoperability:</strong> Lack of standardized communication protocols and interfaces between different DERs and control systems</li>
+                            <li><strong>Control System Performance:</strong> Need for sophisticated algorithms to manage numerous units in near real-time</li>
+                            <li><strong>Smart Grid Infrastructure:</strong> Limited deployment of advanced metering and monitoring systems</li>
+                            <li><strong>Forecasting Accuracy:</strong> Challenges in predicting the behavior of distributed and variable resources</li>
+                        </ul>
+                        
+                        <h4>Economic Challenges</h4>
+                        <ul>
+                            <li><strong>Business Case:</strong> Uncertainty about whether joining a VPP is more profitable than stand-alone operation</li>
+                            <li><strong>Market Access:</strong> High entry barriers to wholesale markets for smaller participants</li>
+                            <li><strong>Revenue Streams:</strong> Some potential value streams are not yet fully developed or accessible</li>
+                            <li><strong>Initial Investment:</strong> High upfront costs for control systems and communication infrastructure</li>
+                        </ul>
+                        
+                        <h4>Regulatory Challenges</h4>
+                        <ul>
+                            <li><strong>Market Rules:</strong> Existing market designs often favor conventional generation</li>
+                            <li><strong>Product Definitions:</strong> Service requirements may be tailored to conventional resources</li>
+                            <li><strong>Market Mechanisms:</strong> Long gate closure times may disadvantage variable resources</li>
+                            <li><strong>Roles and Responsibilities:</strong> Unclear definitions of new market participants like aggregators</li>
+                            <li><strong>Retail Energy Pricing:</strong> Regulated pricing structures may limit incentives for flexibility</li>
+                        </ul>
+                        
+                        <p>Addressing these challenges requires coordinated efforts from technology providers, market operators, regulators, and policy makers to create an environment conducive to VPP deployment and operation.</p>
+                    </div>
+                </section>
+
+                <!-- BESS Technology Section -->
+                <section id="bess-technology">
+                    <h2>Battery Energy Storage Systems (BESS)</h2>
+                    
+                    <div id="bess-overview">
+                        <h3>Overview of BESS Technology</h3>
+                        <p>Battery Energy Storage Systems (BESS) are devices that capture energy and store it for use at a later time. In the context of power systems, BESS convert electrical energy into chemical energy for storage and then back to electrical energy when needed. The rapid advancement of battery technology, particularly lithium-ion batteries, has dramatically reduced costs and improved performance, making BESS increasingly viable for grid applications.</p>
+                        
+                        <div class="info-box">
+                            <h4>Key Components of a BESS:</h4>
+                            <ul>
+                                <li><strong>Battery Modules:</strong> The core energy storage components</li>
+                                <li><strong>Battery Management System (BMS):</strong> Monitors and controls battery operation to ensure safety and optimize performance</li>
+                                <li><strong>Power Conversion System (PCS):</strong> Converts between AC and DC power</li>
+                                <li><strong>Energy Management System (EMS):</strong> Optimizes charging and discharging based on operational objectives</li>
+                                <li><strong>Thermal Management System:</strong> Maintains appropriate operating temperatures</li>
+                                <li><strong>Protection and Safety Systems:</strong> Prevent hazardous conditions</li>
+                            </ul>
+                        </div>
+                        
+                        <p>BESS deployments have grown significantly in recent years, with global installations increasing by 53% in 2024 alone. This growth has been driven by declining costs, improved technology, supportive policies, and increasing needs for grid flexibility.</p>
+                        
+                        <div class="chart-container">
+                            <canvas id="bessCostDeclineChart" class="chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div id="bess-types">
+                        <h3>Types of Battery Energy Storage Systems</h3>
+                        <p>Several battery chemistries and technologies are used in grid-scale BESS applications, each with distinct characteristics:</p>
+                        
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Battery Type</th>
+                                        <th>Advantages</th>
+                                        <th>Limitations</th>
+                                        <th>Typical Applications</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Lithium-ion (Li-ion)</td>
+                                        <td>
+                                            <ul>
+                                                <li>High energy density</li>
+                                                <li>High efficiency (85-95%)</li>
+                                                <li>Fast response time</li>
+                                                <li>Declining costs</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Limited cycle life</li>
+                                                <li>Thermal runaway concerns</li>
+                                                <li>Resource constraints</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Frequency regulation</li>
+                                                <li>Peak shaving</li>
+                                                <li>Energy arbitrage</li>
+                                                <li>Renewable integration</li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Flow Batteries</td>
+                                        <td>
+                                            <ul>
+                                                <li>Decoupled power and energy</li>
+                                                <li>Long cycle life</li>
+                                                <li>Deep discharge capability</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Lower energy density</li>
+                                                <li>Higher costs</li>
+                                                <li>Complex system design</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Long-duration storage</li>
+                                                <li>Renewable integration</li>
+                                                <li>Microgrid support</li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Sodium-sulfur (NaS)</td>
+                                        <td>
+                                            <ul>
+                                                <li>High energy density</li>
+                                                <li>Long discharge duration</li>
+                                                <li>Abundant materials</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>High operating temperature</li>
+                                                <li>Safety concerns</li>
+                                                <li>Self-discharge</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Grid support</li>
+                                                <li>Load leveling</li>
+                                                <li>Renewable integration</li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Lead-acid</td>
+                                        <td>
+                                            <ul>
+                                                <li>Mature technology</li>
+                                                <li>Low cost</li>
+                                                <li>High recyclability</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Limited cycle life</li>
+                                                <li>Low energy density</li>
+                                                <li>Environmental concerns</li>
+                                            </ul>
+                                        </td>
+                                        <td>
+                                            <ul>
+                                                <li>Backup power</li>
+                                                <li>UPS systems</li>
+                                                <li>Small-scale applications</li>
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <p>Lithium-ion batteries currently dominate the grid-scale BESS market due to their favorable performance characteristics and declining costs. However, emerging technologies like solid-state batteries, zinc-based batteries, and hybrid systems combining batteries with supercapacitors are showing promise for specific applications.</p>
+                    </div>
+                    
+                    <div id="bess-applications">
+                        <h3>Applications of BESS in Power Systems</h3>
+                        <p>BESS can provide a wide range of services across the electricity value chain, from generation to end-user applications:</p>
+                        
+                        <div class="grid">
+                            <div class="card">
+                                <div class="card-title">Generation Services</div>
+                                <ul>
+                                    <li><strong>Energy Arbitrage:</strong> Storing energy when prices are low and discharging when prices are high</li>
+                                    <li><strong>Capacity Firming:</strong> Making renewable generation more predictable and reliable</li>
+                                    <li><strong>Black Start:</strong> Providing power to restart the grid after a blackout</li>
+                                    <li><strong>Generation Shifting:</strong> Moving renewable generation to periods of higher demand</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">Transmission & Distribution Services</div>
+                                <ul>
+                                    <li><strong>Congestion Relief:</strong> Reducing transmission bottlenecks</li>
+                                    <li><strong>T&D Deferral:</strong> Delaying or avoiding grid infrastructure upgrades</li>
+                                    <li><strong>Voltage Support:</strong> Maintaining voltage levels within acceptable ranges</li>
+                                    <li><strong>Power Quality:</strong> Mitigating harmonics, flicker, and other disturbances</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">System Balancing Services</div>
+                                <ul>
+                                    <li><strong>Frequency Regulation:</strong> Maintaining system frequency at nominal levels</li>
+                                    <li><strong>Operating Reserves:</strong> Providing backup capacity for contingencies</li>
+                                    <li><strong>Ramp Rate Control:</strong> Managing rapid changes in net load</li>
+                                    <li><strong>Load Following:</strong> Adjusting output to match changing demand</li>
+                                </ul>
+                            </div>
+                            <div class="card">
+                                <div class="card-title">End-User Services</div>
+                                <ul>
+                                    <li><strong>Peak Shaving:</strong> Reducing maximum demand to lower capacity charges</li>
+                                    <li><strong>Backup Power:</strong> Providing electricity during outages</li>
+                                    <li><strong>Self-Consumption:</strong> Maximizing use of on-site generation</li>
+                                    <li><strong>Power Quality:</strong> Ensuring clean power for sensitive equipment</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <p>The ability of BESS to provide multiple services simultaneously—known as value stacking—is a key factor in their economic viability. By capturing revenue from several value streams, BESS projects can achieve better returns on investment and provide greater system benefits.</p>
+                        
+                        <div class="chart-container">
+                            <div id="bessValueStackingChart" class="chart"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Peak Shaving with BESS Section -->
+                <section id="peak-shaving">
+                    <h2>Peak Shaving with BESS in Virtual Power Plants</h2>
+                    
+                    <div id="peak-shaving-concept">
+                        <h3>Concept of Peak Shaving</h3>
+                        <p>Peak shaving is a demand-side management technique that involves reducing electricity consumption during periods of high demand to lower peak load on the grid. By flattening the load profile, peak shaving can reduce costs for both utilities and consumers while improving grid reliability.</p>
+                        
+                        <div class="info-box">
+                            <p>In the context of BESS and VPPs, peak shaving involves charging batteries during low-demand periods when electricity prices are typically lower, and discharging them during high-demand periods to reduce the need for expensive peaking generation resources.</p>
+                        </div>
+                        
+                        <p>Peak shaving is particularly valuable in markets like ERCOT, where price spikes during peak demand periods can reach the market cap of $5,000/MWh or higher. These price spikes create strong economic incentives for deploying technologies that can reduce peak demand.</p>
+                        
+                        <div class="chart-container">
+                            <canvas id="peakShavingConceptChart" class="chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div id="peak-shaving-benefits">
+                        <h3>Benefits of Peak Shaving with BESS in VPPs</h3>
+                        <p>Integrating BESS into VPPs for peak shaving offers numerous benefits to various stakeholders:</p>
+                        
+                        <h4>System-Level Benefits</h4>
+                        <ul>
+                            <li><strong>Reduced Need for Peaking Plants:</strong> Decreases reliance on expensive and often less efficient peaking generation units</li>
+                            <li><strong>Deferred Infrastructure Investment:</strong> Delays or avoids the need for transmission and distribution upgrades</li>
+                            <li><strong>Enhanced Grid Reliability:</strong> Reduces stress on the grid during peak periods, lowering the risk of outages</li>
+                            <li><strong>Lower Emissions:</strong> Decreases the use of fossil fuel peaking plants, reducing greenhouse gas emissions</li>
+                            <li><strong>Improved Renewable Integration:</strong> Helps balance variable renewable generation by shifting energy to peak demand periods</li>
+                        </ul>
+                        
+                        <h4>Market Benefits</h4>
+                        <ul>
+                            <li><strong>Price Moderation:</strong> Reduces extreme price spikes during scarcity conditions</li>
+                            <li><strong>Market Efficiency:</strong> Improves price formation by enabling more flexible response to market signals</li>
+                            <li><strong>New Market Participants:</strong> Enables participation of distributed resources in wholesale markets</li>
+                            <li><strong>Diversified Revenue Streams:</strong> Creates additional value streams for BESS owners</li>
+                        </ul>
+                        
+                        <h4>End-User Benefits</h4>
+                        <ul>
+                            <li><strong>Reduced Demand Charges:</strong> Lowers capacity-related charges for commercial and industrial customers</li>
+                            <li><strong>Energy Cost Savings:</strong> Decreases exposure to high prices during peak periods</li>
+                            <li><strong>Enhanced Reliability:</strong> Provides backup power during outages</li>
+                            <li><strong>Sustainability Goals:</strong> Supports corporate renewable energy and carbon reduction targets</li>
+                        </ul>
+                        
+                        <div class="chart-container">
+                            <div id="peakShavingBenefitsChart" class="chart"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="peak-shaving-implementation">
+                        <h3>Implementation of Peak Shaving with BESS in VPPs</h3>
+                        <p>Successfully implementing peak shaving with BESS in a VPP requires careful planning, design, and operation:</p>
+                        
+                        <h4>System Design Considerations</h4>
+                        <ul>
+                            <li><strong>Sizing:</strong> Determining the optimal power (MW) and energy (MWh) capacity based on load profiles and economic factors</li>
+                            <li><strong>Location:</strong> Placing BESS strategically to address local constraints and maximize value</li>
+                            <li><strong>Technology Selection:</strong> Choosing appropriate battery chemistry and system components for the specific application</li>
+                            <li><strong>Integration:</strong> Ensuring seamless communication and control with the VPP management system</li>
+                            <li><strong>Safety:</strong> Implementing robust safety measures to mitigate fire and other risks</li>
+                        </ul>
+                        
+                        <h4>Operational Strategies</h4>
+                        <p>Effective peak shaving requires sophisticated operational strategies that can be implemented through the VPP control system:</p>
+                        
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Strategy</th>
+                                        <th>Description</th>
+                                        <th>Advantages</th>
+                                        <th>Challenges</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Fixed Schedule</td>
+                                        <td>Predefined charging and discharging schedule based on historical load patterns</td>
+                                        <td>Simple implementation, predictable operation</td>
+                                        <td>Limited adaptability to changing conditions</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Dynamic Threshold</td>
+                                        <td>Discharge when load exceeds a dynamic threshold, charge when below threshold</td>
+                                        <td>Adapts to daily variations, more efficient use of battery capacity</td>
+                                        <td>Requires accurate load forecasting</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Price-Based</td>
+                                        <td>Charge during low-price periods, discharge during high-price periods</td>
+                                        <td>Maximizes economic value, responds to market signals</td>
+                                        <td>Requires price forecasting, may not align with physical peaks</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Predictive Control</td>
+                                        <td>Uses forecasting and optimization algorithms to determine optimal operation</td>
+                                        <td>Maximizes value across multiple objectives, adapts to changing conditions</td>
+                                        <td>Computational complexity, forecast uncertainty</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Machine Learning</td>
+                                        <td>Uses AI algorithms to learn optimal strategies from historical data</td>
+                                        <td>Continuously improves performance, adapts to complex patterns</td>
+                                        <td>Requires extensive data, black-box decision making</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Key Performance Indicators</h4>
+                        <p>Measuring the effectiveness of peak shaving implementations involves tracking several key metrics:</p>
+                        <ul>
+                            <li><strong>Peak Reduction (kW/MW):</strong> The amount by which the peak demand is reduced</li>
+                            <li><strong>Load Factor:</strong> The ratio of average load to peak load, with higher values indicating a flatter load profile</li>
+                            <li><strong>Cost Savings ($):</strong> Reduction in demand charges and energy costs</li>
+                            <li><strong>Return on Investment (%):</strong> Financial returns relative to the investment cost</li>
+                            <li><strong>Battery Utilization (%):</strong> Percentage of battery capacity effectively used</li>
+                            <li><strong>Cycle Count:</strong> Number of charge-discharge cycles, affecting battery lifetime</li>
+                        </ul>
+                        
+                        <div class="warning-box">
+                            <h4>Implementation Challenges:</h4>
+                            <ul>
+                                <li><strong>Forecasting Accuracy:</strong> Predicting when peaks will occur to optimize battery dispatch</li>
+                                <li><strong>Battery Degradation:</strong> Managing cycling to minimize capacity loss over time</li>
+                                <li><strong>Regulatory Constraints:</strong> Navigating market rules that may limit participation</li>
+                                <li><strong>Value Stacking:</strong> Balancing peak shaving with other potential services</li>
+                                <li><strong>Coordination:</strong> Ensuring effective communication between distributed resources</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Case Studies Section -->
+                <section id="case-studies">
+                    <h2>Case Studies: BESS in VPPs for Peak Shaving</h2>
+                    
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">Case Study 1: Tesla Virtual Power Plant in ERCOT</div>
+                            <p><strong>Project Overview:</strong> Tesla's Aggregate Distributed Energy Resource (ADER) Pilot Project in ERCOT allows up to 80 MW of capacity from residential Powerwall batteries to participate in wholesale markets.</p>
+                            <p><strong>Implementation:</strong> Tesla aggregates thousands of individual Powerwall batteries installed in homes across Texas, controlling them as a unified resource that can respond to ERCOT instructions.</p>
+                            <p><strong>Results:</strong> The VPP can inject or withdraw power from the grid based on system needs, helping to manage peak demand and provide grid services. Individual homeowners benefit from backup power and reduced electricity costs, while the system benefits from distributed flexibility.</p>
+                            <p><strong>Key Insights:</strong> This project demonstrates how residential-scale batteries can be effectively aggregated to provide grid-scale services, creating value for both homeowners and the power system.</p>
+                            <div class="citation">Source: Energy-Storage.news, "Foundational market shifts affecting BESS in CAISO and ERCOT coming in 2025"</div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-title">Case Study 2: Commercial & Industrial BESS for Peak Shaving</div>
+                            <p><strong>Project Overview:</strong> Deployment of battery storage systems at commercial and industrial facilities in Vermont by Strata Clean Energy and LS Energy Solutions.</p>
+                            <p><strong>Implementation:</strong> Two 5MW/10MWh battery storage units were installed to provide peak shaving services for commercial customers, financed using the Investment Tax Credit (ITC).</p>
+                            <p><strong>Results:</strong> The systems successfully reduced peak demand charges for the facilities while providing grid support services, demonstrating the economic viability of C&I battery storage for peak shaving applications.</p>
+                            <p><strong>Key Insights:</strong> The project highlights how federal incentives like the ITC can improve the economics of BESS projects and how C&I customers can benefit from peak shaving applications.</p>
+                            <div class="citation">Source: Energy-Storage.news, "Strata and LS Energy complete ITC-funded BESS units in Vermont, US"</div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-title">Case Study 3: Hospital Group BESS Implementation</div>
+                            <p><strong>Project Overview:</strong> South African hospital operator Mediclinic implemented energy storage systems across its facilities for PV optimization, peak shaving, and resilience.</p>
+                            <p><strong>Implementation:</strong> The hospital group deployed battery storage systems alongside solar PV installations to reduce peak demand, optimize self-consumption of solar energy, and provide backup power during outages.</p>
+                            <p><strong>Results:</strong> The systems successfully reduced electricity costs by shaving peak demand, increased solar self-consumption, and enhanced resilience against South Africa's frequent "load shedding" power outages.</p>
+                            <p><strong>Key Insights:</strong> This case demonstrates how critical infrastructure like hospitals can benefit from BESS for multiple purposes, including peak shaving, renewable integration, and resilience.</p>
+                            <div class="citation">Source: Energy-Storage.news, "South Africa hospital group considers storage rollout for PV optimisation, peak shaving, resiliency"</div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-title">Case Study 4: Next Kraftwerke VPP in Germany</div>
+                            <p><strong>Project Overview:</strong> Next Kraftwerke established a large-scale VPP in Germany combining the flexibility of energy producers and consumers.</p>
+                            <p><strong>Implementation:</strong> The Next Pool connects more than 2,900 medium-scale and small-scale power-producing and power-consuming units with a capacity of 1.9 GW using a fully automated centralized control system.</p>
+                            <p><strong>Results:</strong> The VPP successfully participates in wholesale markets and provides grid services, including peak shaving and frequency regulation. The aggregated approach allows smaller resources to access markets that would otherwise be inaccessible.</p>
+                            <p><strong>Key Insights:</strong> This large-scale implementation demonstrates the viability of VPPs for coordinating thousands of distributed resources and creating value through market participation.</p>
+                            <div class="citation">Source: IEEE, "Virtual Power Plants for Grid Resilience: A Concise Overview of Research and Applications"</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Comparative Analysis of Case Studies</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Case Study</th>
+                                    <th>Scale</th>
+                                    <th>Primary Application</th>
+                                    <th>Key Benefits</th>
+                                    <th>Challenges</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Tesla ADER Project</td>
+                                    <td>80 MW (residential)</td>
+                                    <td>Wholesale market participation</td>
+                                    <td>Grid flexibility, homeowner value</td>
+                                    <td>Coordination of thousands of units</td>
+                                </tr>
+                                <tr>
+                                    <td>Vermont C&I BESS</td>
+                                    <td>10 MW / 20 MWh (commercial)</td>
+                                    <td>Peak shaving, demand charge reduction</td>
+                                    <td>Cost savings, multiple revenue streams</td>
+                                    <td>Project financing, regulatory complexity</td>
+                                </tr>
+                                <tr>
+                                    <td>Hospital Group BESS</td>
+                                    <td>Multiple sites (commercial)</td>
+                                    <td>Resilience, peak shaving</td>
+                                    <td>Critical power backup, cost reduction</td>
+                                    <td>Integration with critical systems</td>
+                                </tr>
+                                <tr>
+                                    <td>Next Kraftwerke VPP</td>
+                                    <td>1.9 GW (mixed)</td>
+                                    <td>Market participation, grid services</td>
+                                    <td>Scale, market access for small resources</td>
+                                    <td>Complex coordination, regulatory framework</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3>Lessons Learned from Case Studies</h3>
+                    <ul>
+                        <li><strong>Scalability:</strong> VPPs can effectively aggregate resources from residential to utility scale</li>
+                        <li><strong>Value Stacking:</strong> Most successful projects capture multiple value streams</li>
+                        <li><strong>Market Access:</strong> VPPs enable smaller resources to participate in markets previously inaccessible to them</li>
+                        <li><strong>Control Systems:</strong> Sophisticated control and communication systems are critical for effective operation</li>
+                        <li><strong>Regulatory Framework:</strong> Supportive market rules and regulations are essential for VPP success</li>
+                        <li><strong>Customer Engagement:</strong> End-user participation and understanding are important for distributed resource aggregation</li>
+                    </ul>
+                </section>
+
+                <!-- Future Outlook Section -->
+                <section id="future-outlook">
+                    <h2>Future Outlook for BESS in VPPs</h2>
+                    
+                    <h3>Market Trends and Projections</h3>
+                    <p>The market for BESS in VPPs is expected to grow significantly in the coming years, driven by several key trends:</p>
+                    
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">Technology Trends</div>
+                            <ul>
+                                <li><strong>Declining Battery Costs:</strong> Continued cost reductions making BESS more economically viable</li>
+                                <li><strong>Improved Performance:</strong> Advances in energy density, cycle life, and safety</li>
+                                <li><strong>New Chemistries:</strong> Development of alternative battery technologies for specific applications</li>
+                                <li><strong>Advanced Controls:</strong> More sophisticated algorithms for optimizing VPP operation</li>
+                                <li><strong>AI and Machine Learning:</strong> Enhanced forecasting and decision-making capabilities</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Market Developments</div>
+                            <ul>
+                                <li><strong>Increasing Deployments:</strong> Global BESS deployments grew 53% in 2024</li>
+                                <li><strong>New Business Models:</strong> Emergence of energy-as-a-service and other innovative approaches</li>
+                                <li><strong>Market Consolidation:</strong> Mergers and acquisitions among technology providers and developers</li>
+                                <li><strong>Geographic Expansion:</strong> Growth beyond established markets into emerging economies</li>
+                                <li><strong>Standardization:</strong> Development of industry standards for interoperability</li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Regulatory Evolution</div>
+                            <ul>
+                                <li><strong>Market Reform:</strong> Changes to market rules to better accommodate storage and VPPs</li>
+                                <li><strong>New Products:</strong> Development of market products tailored to BESS capabilities</li>
+                                <li><strong>Policy Support:</strong> Incentives and mandates for energy storage deployment</li>
+                                <li><strong>Aggregation Rules:</strong> Frameworks for DER aggregation and market participation</li>
+                                <li><strong>Safety Standards:</strong> Enhanced requirements for BESS safety and reliability</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="futureProjectionsChart" class="chart"></canvas>
+                    </div>
+                    
+                    <h3>Upcoming Changes in ERCOT</h3>
+                    <p>ERCOT is implementing significant market changes that will affect BESS and VPP operations:</p>
+                    
+                    <div class="info-box">
+                        <h4>Real-Time Co-Optimization with Batteries (RTC+B)</h4>
+                        <p>Scheduled to go live on December 5, 2025, RTC+B will change how ERCOT manages real-time and day-ahead markets by co-optimizing energy and ancillary services in the real-time market and introducing new block products. This change aims to:</p>
+                        <ul>
+                            <li>Improve the efficiency of dispatching resources</li>
+                            <li>Create more precise price signals from the real-time market</li>
+                            <li>Reduce arbitrage opportunities between day-ahead and real-time markets</li>
+                            <li>Foster better price convergence between markets</li>
+                        </ul>
+                        <p>These changes are expected to create new opportunities for BESS in VPPs by better valuing their flexibility and fast response capabilities.</p>
+                        <div class="citation">Source: Energy-Storage.news, "Foundational market shifts affecting BESS in CAISO and ERCOT coming in 2025"</div>
+                    </div>
+                    
+                    <h3>Emerging Applications and Innovations</h3>
+                    <p>Several emerging applications and innovations are expected to shape the future of BESS in VPPs:</p>
+                    
+                    <div class="grid">
+                        <div class="card">
+                            <div class="card-title">Grid-Forming Inverters</div>
+                            <p>Unlike traditional grid-following inverters, grid-forming inverters can establish voltage and frequency references, enabling BESS to provide inertia and black start capabilities. This technology is critical for maintaining grid stability in systems with high renewable penetration.</p>
+                            <div class="badge badge-primary">Technical Innovation</div>
+                            <div class="badge badge-secondary">Grid Stability</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Hybrid BESS Solutions</div>
+                            <p>Combining different storage technologies (e.g., batteries and supercapacitors) to leverage their complementary characteristics. For example, a recent project in China connected a hybrid BESS and supercapacitor system to provide multiple grid services including black start capability.</p>
+                            <div class="badge badge-primary">Technical Innovation</div>
+                            <div class="badge badge-success">Performance Enhancement</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Vehicle-to-Grid Integration</div>
+                            <p>Incorporating electric vehicle batteries into VPPs to provide grid services when vehicles are connected to charging infrastructure. This approach significantly expands the potential resource base for VPPs.</p>
+                            <div class="badge badge-primary">Technical Innovation</div>
+                            <div class="badge badge-warning">Emerging Application</div>
+                        </div>
+                        <div class="card">
+                            <div class="card-title">Long-Duration Energy Storage</div>
+                            <p>Development of storage technologies capable of discharging at rated power for 8+ hours, enabling new applications such as multi-day load shifting and seasonal storage. These technologies will complement shorter-duration lithium-ion systems in VPPs.</p>
+                            <div class="badge badge-primary">Technical Innovation</div>
+                            <div class="badge badge-danger">Research Focus</div>
+                        </div>
+                    </div>
+                    
+                    <h3>Challenges and Opportunities</h3>
+                    <p>The future development of BESS in VPPs faces several challenges but also presents significant opportunities:</p>
+                    
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Challenge</th>
+                                    <th>Opportunity</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Supply chain constraints for battery materials</td>
+                                    <td>Development of alternative chemistries and recycling programs</td>
+                                </tr>
+                                <tr>
+                                    <td>Integration of diverse DERs with different characteristics</td>
+                                    <td>Advanced control systems leveraging AI and machine learning</td>
+                                </tr>
+                                <tr>
+                                    <td>Cybersecurity risks in distributed control systems</td>
+                                    <td>Implementation of robust security frameworks and protocols</td>
+                                </tr>
+                                <tr>
+                                    <td>Regulatory frameworks lagging technological development</td>
+                                    <td>Engagement with regulators to develop supportive policies</td>
+                                </tr>
+                                <tr>
+                                    <td>Battery degradation and end-of-life management</td>
+                                    <td>Second-life applications and circular economy approaches</td>
+                                </tr>
+                                <tr>
+                                    <td>Market saturation and value deflation</td>
+                                    <td>New market products and services that value flexibility</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Conclusion Section -->
+                <section id="conclusion">
+                    <h2>Conclusion</h2>
+                    
+                    <p>The integration of Battery Energy Storage Systems (BESS) into Virtual Power Plants (VPPs) represents a powerful approach to addressing the challenges facing modern power systems, particularly in markets like ERCOT that are experiencing rapid changes in their generation mix and increasing peak demand.</p>
+                    
+                    <h3>Key Findings</h3>
+                    <ul>
+                        <li><strong>Market Evolution:</strong> ERCOT's energy-only market design creates both challenges and opportunities for BESS and VPPs, with upcoming changes like RTC+B expected to enhance the value proposition for flexible resources.</li>
+                        <li><strong>VPP Capabilities:</strong> VPPs provide a framework for aggregating distributed resources, enabling them to participate in wholesale markets and provide grid services that would be inaccessible to individual small-scale resources.</li>
+                        <li><strong>BESS Applications:</strong> Battery storage systems offer multiple value streams, with peak shaving being a particularly valuable application in markets with high price volatility and capacity constraints.</li>
+                        <li><strong>Implementation Success:</strong> Case studies demonstrate that BESS in VPPs can effectively reduce peak demand, lower costs, enhance renewable integration, and improve grid reliability across various scales and sectors.</li>
+                        <li><strong>Future Growth:</strong> The market for BESS in VPPs is poised for significant growth, driven by declining costs, technological improvements, supportive policies, and evolving market structures.</li>
+                    </ul>
+                    
+                    <h3>Recommendations</h3>
+                    <ol>
+                        <li><strong>For Policy Makers:</strong> Develop regulatory frameworks that enable fair participation of VPPs in all relevant markets, recognize their unique characteristics, and appropriately value the services they provide.</li>
+                        <li><strong>For Utilities and Grid Operators:</strong> Embrace VPPs as tools for enhancing grid flexibility and reliability, and develop processes for effectively integrating them into system operations and planning.</li>
+                        <li><strong>For Technology Providers:</strong> Focus on improving interoperability, control systems, and forecasting capabilities to enhance the performance and value of BESS in VPPs.</li>
+                        <li><strong>For BESS Developers:</strong> Design systems with multiple value streams in mind, considering how peak shaving can be combined with other services to maximize economic returns.</li>
+                        <li><strong>For End Users:</strong> Evaluate opportunities to participate in VPPs as a means of monetizing existing assets, reducing energy costs, and contributing to grid reliability.</li>
+                    </ol>
+                    
+                    <p>As the power system continues to evolve toward a more distributed, renewable, and dynamic paradigm, the role of BESS in VPPs will become increasingly important. By effectively harnessing the flexibility and capabilities of these technologies, stakeholders can create a more efficient, reliable, and sustainable electricity system that benefits all participants.</p>
+                </section>
+
+                <!-- References Section -->
+                <section id="references">
+                    <h2>References</h2>
+                    
+                    <ol>
+                        <li>IEEE. "Virtual power plants (VPP) - a new perspective for energy generation?" <a href="https://ieeexplore.ieee.org/document/1438108" target="_blank">https://ieeexplore.ieee.org/document/1438108</a></li>
+                        <li>IEEE. "Virtual power plants: Definition, applications and barriers to the implementation in the distribution system." <a href="https://ieeexplore.ieee.org/document/7216693" target="_blank">https://ieeexplore.ieee.org/document/7216693</a></li>
+                        <li>IEEE. "Virtual Power Plants for Grid Resilience: A Concise Overview of Research and Applications." <a href="https://ieeexplore.ieee.org/document/10415859/" target="_blank">https://ieeexplore.ieee.org/document/10415859/</a></li>
+                        <li>ERCOT. "Operating Procedures." <a href="https://www.ercot.com/mktrules/guides/procedures" target="_blank">https://www.ercot.com/mktrules/guides/procedures</a></li>
+                        <li>ERCOT. "Operations Training Working Group." <a href="https://www.ercot.com/committees/ros/otwg" target="_blank">https://www.ercot.com/committees/ros/otwg</a></li>
+                        <li>ERCOT. "Operations Working Group." <a href="https://www.ercot.com/committees/ros/owg" target="_blank">https://www.ercot.com/committees/ros/owg</a></li>
+                        <li>ERCOT. "2023 Trending Topics." <a href="https://www.ercot.com/news/trendingtopics/2023" target="_blank">https://www.ercot.com/news/trendingtopics/2023</a></li>
+                        <li>ERCOT. "Power Operations Bulletins." <a href="https://www.ercot.com/services/comm/pobs" target="_blank">https://www.ercot.com/services/comm/pobs</a></li>
+                        <li>Energy-Storage.news. "Foundational market shifts affecting BESS in CAISO and ERCOT coming in 2025." <a href="https://www.energy-storage.news/foundational-market-shifts-affecting-bess-in-caiso-and-ercot-coming-in-2025/" target="_blank">https://www.energy-storage.news/foundational-market-shifts-affecting-bess-in-caiso-and-ercot-coming-in-2025/</a></li>
+                        <li>Energy-Storage.news. "Peak shaving Archives." <a href="https://www.energy-storage.news/tag/peak-shaving/" target="_blank">https://www.energy-storage.news/tag/peak-shaving/</a></li>
+                        <li>Energy-Storage.news. "Global BESS deployments soared 53% in 2024." <a href="https://www.energy-storage.news/global-bess-deployments-soared-53-in-2024/" target="_blank">https://www.energy-storage.news/global-bess-deployments-soared-53-in-2024/</a></li>
+                        <li>Energy-Storage.news. "The evolving BESS market in 2024: A key year for safety, new technologies, and long-duration energy storage." <a href="https://www.energy-storage.news/the-evolving-bess-market-in-2024-a-key-year-for-safety-new-technologies-and-long-duration-energy-storage/" target="_blank">https://www.energy-storage.news/the-evolving-bess-market-in-2024-a-key-year-for-safety-new-technologies-and-long-duration-energy-storage/</a></li>
+                    </ol>
+                </section>
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="footer-content">
+                    <p class="footer-text">© 2025 ERCOT Energy Market and BESS in Virtual Power Plants Report</p>
+                    <ul class="footer-links">
+                        <li><a href="#introduction">Top</a></li>
+                        <li><a href="#references">References</a></li>
+                    </ul>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <!-- Scripts -->
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('navLinks').classList.toggle('show');
+        });
+
+        // Sidebar toggle for mobile
+        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+
+        // Submenu toggle
+        document.querySelectorAll('.has-submenu > a').forEach(item => {
+            item.addEventListener('click', event => {
+                event.preventDefault();
+                const submenu = event.target.nextElementSibling;
+                submenu.classList.toggle('show');
+            });
+        });
+
+        // Back to top button
+        window.addEventListener('scroll', function() {
+            if (window.pageYOffset > 300) {
+                document.getElementById('backToTop').classList.add('show');
+            } else {
+                document.getElementById('backToTop').classList.remove('show');
+            }
+        });
+
+        document.getElementById('backToTop').addEventListener('click', function(e) {
+            e.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Initialize charts when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Introduction Chart
+            const introCtx = document.getElementById('introChart').getContext('2d');
+            const introChart = new Chart(introCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                    datasets: [
+                        {
+                            label: 'Renewable Generation (GW)',
+                            data: [22, 27, 32, 38, 45, 52, 60],
+                            borderColor: '#38b000',
+                            backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'BESS Deployment (GW)',
+                            data: [0.5, 1.2, 2.5, 4.8, 8.2, 14.5, 22.2],
+                            borderColor: '#0066cc',
+                            backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Growth of Renewable Generation and BESS Deployment'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Capacity (GW)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // ERCOT Generation Mix Chart
+            const ercotGenMixCtx = document.getElementById('ercotGenerationMixChart').getContext('2d');
+            const ercotGenMixChart = new Chart(ercotGenMixCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Natural Gas', 'Wind', 'Coal', 'Solar', 'Nuclear', 'Other'],
+                    datasets: [{
+                        data: [42, 24, 16, 10, 7, 1],
+                        backgroundColor: [
+                            '#ff9500',
+                            '#38b000',
+                            '#6c757d',
+                            '#ffd500',
+                            '#7b2cbf',
+                            '#00a3e0'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'ERCOT Generation Mix (2024)'
+                        },
+                        legend: {
+                            position: 'right',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.raw + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // ERCOT Price Volatility Chart
+            const ercotPriceVolatilityChart = new ApexCharts(document.querySelector("#ercotPriceVolatilityChart"), {
+                series: [{
+                    name: 'Price',
+                    data: [45, 52, 38, 24, 33, 26, 21, 20, 6, 8, 15, 10, 12, 18, 27, 32, 35, 120, 950, 2500, 1800, 450, 200, 65]
+                }],
+                chart: {
+                    height: 350,
+                    type: 'line',
+                    zoom: {
+                        enabled: false
+                    }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                title: {
+                    text: 'ERCOT Price Volatility During Peak Demand Day',
+                    align: 'left'
+                },
+                grid: {
+                    row: {
+                        colors: ['#f3f3f3', 'transparent'],
+                        opacity: 0.5
+                    },
+                },
+                xaxis: {
+                    categories: ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+                    title: {
+                        text: 'Hour of Day'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Price ($/MWh)'
+                    },
+                    logarithmic: true
+                },
+                markers: {
+                    size: 4,
+                    colors: ['#0066cc'],
+                    strokeColors: '#fff',
+                    strokeWidth: 2
+                },
+                annotations: {
+                    yaxis: [{
+                        y: 100,
+                        borderColor: '#ff9500',
+                        label: {
+                            borderColor: '#ff9500',
+                            style: {
+                                color: '#fff',
+                                background: '#ff9500'
+                            },
+                            text: 'Peak Demand Period'
+                        }
+                    }]
+                }
+            });
+            ercotPriceVolatilityChart.render();
+
+            // VPP Architecture Chart
+            const vppArchitectureChart = new ApexCharts(document.querySelector("#vppArchitectureChart"), {
+                series: [{
+                    name: 'VPP Components',
+                    data: [
+                        {
+                            x: 'DERs',
+                            y: [0, 3],
+                            fillColor: '#38b000'
+                        },
+                        {
+                            x: 'Control System',
+                            y: [3, 6],
+                            fillColor: '#0066cc'
+                        },
+                        {
+                            x: 'ICT',
+                            y: [6, 9],
+                            fillColor: '#7b2cbf'
+                        },
+                        {
+                            x: 'Management Center',
+                            y: [9, 12],
+                            fillColor: '#ff9500'
+                        }
+                    ]
+                }],
+                chart: {
+                    height: 350,
+                    type: 'rangeBar',
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: true,
+                        distributed: true,
+                        dataLabels: {
+                            position: 'center'
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: function(val, opts) {
+                        return opts.w.globals.labels[opts.dataPointIndex];
+                    },
+                    style: {
+                        colors: ['#fff']
+                    }
+                },
+                xaxis: {
+                    type: 'numeric',
+                    labels: {
+                        show: false
+                    },
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        show: false
+                    }
+                },
+                grid: {
+                    show: false
+                },
+                title: {
+                    text: 'Virtual Power Plant Architecture',
+                    align: 'center'
+                },
+                tooltip: {
+                    custom: function({series, seriesIndex, dataPointIndex, w}) {
+                        const component = w.globals.labels[dataPointIndex];
+                        let content = '';
+                        
+                        if (component === 'DERs') {
+                            content = 'Distributed Energy Resources: Generation units, storage systems, and flexible loads';
+                        } else if (component === 'Control System') {
+                            content = 'Control System: Coordinates all DERs to operate as a single entity';
+                        } else if (component === 'ICT') {
+                            content = 'Information and Communication Technologies: Enables data exchange and control';
+                        } else if (component === 'Management Center') {
+                            content = 'Management Center: Central hub for information processing and decision making';
+                        }
+                        
+                        return '<div class="apexcharts-tooltip-title">' + component + '</div>' +
+                               '<div class="apexcharts-tooltip-series-group">' + content + '</div>';
+                    }
+                }
+            });
+            vppArchitectureChart.render();
+
+            // BESS Cost Decline Chart
+            const bessCostCtx = document.getElementById('bessCostDeclineChart').getContext('2d');
+            const bessCostChart = new Chart(bessCostCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2015', '2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024'],
+                    datasets: [{
+                        label: 'Li-ion Battery Pack Cost ($/kWh)',
+                        data: [384, 295, 221, 185, 156, 140, 132, 151, 139, 124],
+                        borderColor: '#0066cc',
+                        backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Lithium-ion Battery Pack Cost Decline'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            title: {
+                                display: true,
+                                text: 'Cost ($/kWh)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // BESS Value Stacking Chart
+            const bessValueStackingChart = new ApexCharts(document.querySelector("#bessValueStackingChart"), {
+                series: [{
+                    name: 'Energy Arbitrage',
+                    data: [20, 22, 25, 27, 30]
+                }, {
+                    name: 'Capacity Value',
+                    data: [15, 18, 20, 22, 25]
+                }, {
+                    name: 'Ancillary Services',
+                    data: [12, 15, 18, 20, 22]
+                }, {
+                    name: 'T&D Deferral',
+                    data: [8, 10, 12, 15, 18]
+                }, {
+                    name: 'Peak Shaving',
+                    data: [25, 28, 30, 32, 35]
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    stacked: true,
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                    },
+                },
+                stroke: {
+                    width: 1,
+                    colors: ['#fff']
+                },
+                title: {
+                    text: 'BESS Value Stacking by Application'
+                },
+                xaxis: {
+                    categories: ['2020', '2021', '2022', '2023', '2024'],
+                    title: {
+                        text: 'Year'
+                    }
+                },
+                yaxis: {
+                    title: {
+                        text: 'Value ($/kWh-year)'
+                    },
+                },
+                fill: {
+                    opacity: 1
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'left',
+                    offsetX: 40
+                },
+                colors: ['#0066cc', '#00a3e0', '#7b2cbf', '#38b000', '#ff9500']
+            });
+            bessValueStackingChart.render();
+
+            // Peak Shaving Concept Chart
+            const peakShavingCtx = document.getElementById('peakShavingConceptChart').getContext('2d');
+            const peakShavingChart = new Chart(peakShavingCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+                    datasets: [
+                        {
+                            label: 'Original Load Profile',
+                            data: [40, 35, 30, 35, 50, 65, 75, 80, 85, 95, 90, 70],
+                            borderColor: '#d90429',
+                            backgroundColor: 'rgba(217, 4, 41, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Modified Load Profile with BESS',
+                            data: [45, 40, 35, 40, 55, 65, 70, 75, 75, 80, 75, 65],
+                            borderColor: '#38b000',
+                            backgroundColor: 'rgba(56, 176, 0, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: false
+                        },
+                        {
+                            label: 'Battery Charging',
+                            data: [5, 5, 5, 5, 5, 0, 0, 0, 0, 0, 0, 0],
+                            borderColor: '#0066cc',
+                            backgroundColor: 'rgba(0, 102, 204, 0.3)',
+                            borderWidth: 1,
+                            tension: 0.4,
+                            fill: true,
+                            type: 'bar'
+                        },
+                        {
+                            label: 'Battery Discharging',
+                            data: [0, 0, 0, 0, 0, 0, -5, -5, -10, -15, -15, -5],
+                            borderColor: '#7b2cbf',
+                            backgroundColor: 'rgba(123, 44, 191, 0.3)',
+                            borderWidth: 1,
+                            tension: 0.4,
+                            fill: true,
+                            type: 'bar'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Peak Shaving Concept with BESS'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Load (MW)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time of Day'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Peak Shaving Benefits Chart
+            const peakShavingBenefitsChart = new ApexCharts(document.querySelector("#peakShavingBenefitsChart"), {
+                series: [{
+                    name: 'Annual Savings',
+                    data: [150000, 280000, 420000, 580000, 750000]
+                }],
+                chart: {
+                    height: 350,
+                    type: 'bar',
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 10,
+                        dataLabels: {
+                            position: 'top',
+                        },
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: function (val) {
+                        return '$' + val.toLocaleString();
+                    },
+                    offsetY: -20,
+                    style: {
+                        fontSize: '12px',
+                        colors: ["#304758"]
+                    }
+                },
+                xaxis: {
+                    categories: ["1 MW / 2 MWh", "2 MW / 4 MWh", "3 MW / 6 MWh", "4 MW / 8 MWh", "5 MW / 10 MWh"],
+                    position: 'bottom',
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    },
+                    title: {
+                        text: 'BESS Size'
+                    }
+                },
+                yaxis: {
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false,
+                    },
+                    labels: {
+                        show: true,
+                        formatter: function (val) {
+                            return '$' + val.toLocaleString();
+                        }
+                    },
+                    title: {
+                        text: 'Annual Savings'
+                    }
+                },
+                title: {
+                    text: 'Estimated Annual Savings from Peak Shaving by BESS Size',
+                    floating: false,
+                    align: 'center',
+                },
+                colors: ['#0066cc']
+            });
+            peakShavingBenefitsChart.render();
+
+            // Future Projections Chart
+            const futureProjectionsCtx = document.getElementById('futureProjectionsChart').getContext('2d');
+            const futureProjectionsChart = new Chart(futureProjectionsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['2024', '2025', '2026', '2027', '2028', '2029', '2030'],
+                    datasets: [
+                        {
+                            label: 'Global BESS Deployments (GW)',
+                            data: [30, 45, 65, 90, 120, 160, 210],
+                            borderColor: '#0066cc',
+                            backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'BESS in VPPs (GW)',
+                            data: [5, 10, 18, 30, 48, 70, 100],
+                            borderColor: '#7b2cbf',
+                            backgroundColor: 'rgba(123, 44, 191, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'BESS in ERCOT (GW)',
+                            data: [3, 5, 8, 12, 18, 25, 35],
+                            borderColor: '#ff9500',
+                            backgroundColor: 'rgba(255, 149, 0, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Projected Growth of BESS Deployments'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Capacity (GW)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
